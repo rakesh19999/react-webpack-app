@@ -1,43 +1,46 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-const dotenv = require("dotenv");
 const webpack = require("webpack");
 
-// Load environment variables from .env file in local development
-dotenv.config();
+module.exports = (env) => {
+  // Get the environment variables passed during the build
+  const environment = env || {};
 
-module.exports = {
-  entry: "./src/index.js",
-  output: {
-    path: path.resolve(__dirname, "dist"),
-    filename: "bundle.js",
-  },
-  devServer: {
-    static: {
-      directory: path.join(__dirname, "dist"),
+  return {
+    entry: "./src/index.js", // Your React entry file
+    output: {
+      path: path.resolve(__dirname, "dist"),
+      filename: "bundle.js",
+      clean: true, // Clean the dist folder before each build
     },
-    port: 3000,
-  },
-  module: {
-    rules: [
-      {
-        test: /\.js$/,
-        exclude: /node_modules/,
-        use: {
-          loader: "babel-loader",
-        },
+    mode: environment.production ? "production" : "development", // Mode based on environment
+    devServer: {
+      static: {
+        directory: path.join(__dirname, "dist"),
       },
+      port: 3000,
+    },
+    module: {
+      rules: [
+        {
+          test: /\.js$/,
+          exclude: /node_modules/,
+          use: {
+            loader: "babel-loader",
+          },
+        },
+      ],
+    },
+    plugins: [
+      new HtmlWebpackPlugin({
+        template: "./public/index.html",
+      }),
+      // Inject environment variables into the React app
+      new webpack.DefinePlugin({
+        "process.env.REACT_APP_API_URL": JSON.stringify(
+          environment.REACT_APP_API_URL || process.env.REACT_APP_API_URL
+        ),
+      }),
     ],
-  },
-  plugins: [
-    new HtmlWebpackPlugin({
-      template: "./public/index.html",
-    }),
-    // Define environment variables during build
-    new webpack.DefinePlugin({
-      "process.env.REACT_APP_API_URL": JSON.stringify(
-        process.env.REACT_APP_API_URL
-      ),
-    }),
-  ],
+  };
 };
